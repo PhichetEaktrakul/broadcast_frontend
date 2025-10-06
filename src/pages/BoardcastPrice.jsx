@@ -196,7 +196,7 @@ export default function BoardcastPrice() {
                   <div className="text-md">เสนอซื้อ</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
                     <span className="text-2xl font-bold">
-                      {goldAssn?.sellPrice?.replace(".00", "")}
+                      {goldAssn?.buyPrice?.replace(".00", "")}
                     </span>
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function BoardcastPrice() {
                   <div className="text-md">เสนอขาย</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
                     <span className="text-2xl font-bold">
-                      {goldAssn?.buyPrice?.replace(".00", "")}
+                      {goldAssn?.sellPrice?.replace(".00", "")}
                     </span>
                   </div>
                 </div>
