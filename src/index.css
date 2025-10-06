@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@import "./styles/Font-sukhumvit.css";
+ @plugin "daisyui" {
+   themes: light --default
+ }
+
+/* Base Layer */
+@layer base {
+  body {
+    font-family: "SukhumvitSetNormal", sans-serif;
+  }
+}
+
+.tab:not(:checked):not(label:has(:checked)):not(:hover):not(.tab-active):not([aria-selected="true"]) {
+  @supports (color: color-mix(in lab, red, red)) {
+    color: color-mix(in oklab, #ffffff 50%, #ffffff);
+  }
+}

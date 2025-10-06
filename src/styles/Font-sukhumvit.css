@@ -1,0 +1,30 @@
+@font-face {
+  font-family: "SukhumvitSetNormal";
+  src: url("../assets/font/sukhumvit/SukhumvitSet-Text.woff2") format("woff2"),
+    url("../assets/font/sukhumvit/SukhumvitSet-Text.woff") format("woff"),
+    url("../assets/font/sukhumvit/SukhumvitSet-Text.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SukhumvitSetBold";
+  src: url("../assets/font/sukhumvit/SukhumvitSet-Bold.woff2") format("woff2"),
+    url("../assets/font/sukhumvit/SukhumvitSet-Bold.woff") format("woff"),
+    url("../assets/font/sukhumvit/SukhumvitSet-Bold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sukhumvit: "SukhumvitSetNormal", sans-serif;
+  --font-sukhumvit-bold: "SukhumvitSetBold", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sukhumvit;
+  }
+}
