@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
 import GoldPriceCard from "../components/GoldPriceCard";
-import TradingViewWidget from "../components/TradingViewWidget";
+import TradingViewCard from "../components/TradingViewCard";
 import BuySellContainer from "../components/BuySellContainer";
+import Header from "../components/Header";
 import GoldIcon from "../assets/GoldIcon.png";
+import { FormatNumber } from "../utility/function";
 
 export default function BoardcastPrice() {
-  const [prices, setPrices] = useState({
+  const [goldGcap, setGoldGcap] = useState({
     gold99_buy: 0,
     gold99_sell: 0,
     old_gold99_buy: 0,
@@ -16,27 +18,93 @@ export default function BoardcastPrice() {
     old_gold96_buy: 0,
     old_gold96_sell: 0,
   });
-  const [goldAssn, setGoldAssn] = useState(null);
-  // const [goldHiLo, setGoldHiLo] = useState({ gold99: 0 });
+  const [goldAssn, setGoldAssn] = useState(null);  
+  const [silverPrice, setSilverPrice] = useState([]);
+  const [updatedTime, setUpdatedTime] = useState("");
+  const [minmax, setMinmax] = useState({
+    gold99: { min: 0, max: 0 },
+    gold96: { min: 0, max: 0 },
+  });
+
+  //----------------------------------------------------------------------------------------
+  // Fetch Initial Price & Refresh Data Periodically
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [gcapRes, assnRes, silverRes, minmaxRes] = await Promise.all([
+          api.get("/gold-gcap/latest"),
+          api.get("/gold-assn/latest"),
+          api.get(
+            "https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"
+          ),
+          api.get("https://uatptestgcapweb.gcap.co.th/api/tradePriceMinMax"),
+        ]);
+
+        if (gcapRes.data) setGoldGcap(gcapRes.data);
+        if (assnRes.data) setGoldAssn(assnRes.data);
+        if (silverRes.data?.data?.items?.[0]?.rows) setSilverPrice(silverRes.data.data.items[0].rows.reverse());
+        if (Array.isArray(minmaxRes.data)) {
+          const updated = {
+            gold99: { min: 0, max: 0 },
+            gold96: { min: 0, max: 0 },
+          };
+          minmaxRes.data.forEach((item) => {
+            if (item.assetGold === "1") {
+              updated.gold99 = { min: item.MinPrice, max: item.MaxPrice };
+            } else if (item.assetGold === "2") {
+              updated.gold96 = { min: item.MinPrice, max: item.MaxPrice };
+            }
+          });
+          setMinmax(updated);
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data:", err);
+      }
+    };
+
+    const fetchGoldAssn = async () => {
+      try {
+        const res = await api.get("/gold-assn/latest");
+        if (res.data) setGoldAssn(res.data);
+      } catch (err) {
+        console.error("Failed to refresh gold association price:", err);
+      }
+    };
+
+    const fetchSilverPrice = async () => {
+      try {
+        const res = await api.get(
+          "https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"
+        );
+        if (res.data?.data?.items?.[0]?.rows)
+          setSilverPrice(res.data.data.items[0].rows.reverse());
+      } catch (err) {
+        console.error("Failed to refresh silver price:", err);
+      }
+    };
+
+    fetchData();
+   
+    const goldInterval = setInterval(fetchGoldAssn, 600000); // Refresh every 10 minutes (Gold Assn)    
+    const silverInterval = setInterval(fetchSilverPrice, 300000); // Refresh every 5 minutes (Silver)
+    return () => {
+      clearInterval(goldInterval);
+      clearInterval(silverInterval);
+    };
+  }, []);
+  //----------------------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------------------
   // Fetch Gold RT Price From SignalR
   useEffect(() => {
-    api
-      .get("/gold-gcap/latest")
-      .then((res) => {
-        if (res.data) {
-          setPrices(res.data);
-        }
-      })
-      .catch((err) => console.error("❌ Failed to fetch latest price:", err));
-
     const waitForJQuery = setInterval(() => {
       if (window.$ && window.$.connection?.priceHub) {
         clearInterval(waitForJQuery);
 
         const priceHub = window.$.connection.priceHub;
         const parsePrice = (val) => parseFloat(val?.replace(/,/g, "")) || 0;
+
+        let debounceTimer = null;
 
         priceHub.client.sendGoldPrice = function (
           gold99_buy,
@@ -58,42 +126,50 @@ export default function BoardcastPrice() {
             old_gold96_buy: parsePrice(old_gold96_buy),
             old_gold96_sell: parsePrice(old_gold96_sell),
           };
-          setPrices(newPrices);
+          setGoldGcap(newPrices);
 
-          if (newPrices.gold99_buy > 0 && newPrices.gold96_buy > 0) {
-            api
-              .post("/gold-gcap", newPrices)
-              /* .then(() => console.log("✅ Gold price saved:", newPrices)) */
-              .catch((err) => console.error("❌ Failed to save:", err));
-          }
+          // 🕒 Update time in Thai format
+          const now = new Date();
+          const formatted = now.toLocaleDateString("th-TH", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+          const timeStr = now.toLocaleTimeString("th-TH", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+          setUpdatedTime(`ประจำวันที่ ${formatted} เวลา ${timeStr} น.`);
+
+          // ✅ Debounce API call (1 second)
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            if (newPrices.gold99_buy > 0 && newPrices.gold96_buy > 0) {
+              api
+                .post("/gold-gcap", newPrices)
+                .catch((err) => console.error("❌ Failed to save:", err));
+            }
+          }, 1000);
         };
 
-        /* window.$.connection.hub.url = "https://uatg266.gcaponline.com/signalr"; */
+        // Connect to SignalR
         window.$.connection.hub.url = "https://g266.gcaponline.com/signalr";
         window.$.connection.hub
           .start()
-          .done(() => {
-            console.log("Connected to SignalR");
-            /* console.log("Connected to SignalR:", window.$.connection.hub.id); */
-          })
-          .fail(() => {
-            console.error("Failed to connect to SignalR");
-          });
+          .done(() => console.log("✅ Connected to SignalR"))
+          .fail(() => console.error("❌ Failed to connect to SignalR"));
 
+        // Reconnect if disconnected
         window.$.connection.hub.disconnected(() => {
-          console.warn("SignalR disconnected. Reconnecting in 2s...");
+          console.warn("⚠️ SignalR disconnected. Reconnecting in 2s...");
           setTimeout(() => {
             window.$.connection.hub
               .start()
-              .done(() => {
-                console.log(
-                  "Reconnected to SignalR:",
-                  window.$.connection.hub.id
-                );
-              })
-              .fail(() => {
-                console.error("Reconnection attempt failed.");
-              });
+              .done(() =>
+                console.log("🔁 Reconnected:", window.$.connection.hub.id)
+              )
+              .fail(() => console.error("❌ Reconnection failed."));
           }, 2000);
         });
       }
@@ -103,56 +179,30 @@ export default function BoardcastPrice() {
   }, []);
   //----------------------------------------------------------------------------------------
 
-  //----------------------------------------------------------------------------------------
-  // Fetch Gold Association Price Every 10 Minutes
-  useEffect(() => {
-    const fetchGoldGcap = async () => {
-      try {
-        const res = await api.get("/gold-assn/latest");
-        setGoldAssn(res.data);
-        /* console.log("Fetched gold price:", res.data); */
-      } catch (err) {
-        console.error("Error fetching gold price:", err);
-      }
-    };
-
-    fetchGoldGcap();
-    // Call every 10 minutes (600000 ms)
-    const interval = setInterval(fetchGoldGcap, 600000);
-
-    // Cleanup on unmount
-    return () => clearInterval(interval);
-  }, []);
-  //----------------------------------------------------------------------------------------
-
   return (
-    <div className="h-[100vh] bg-linear-150 from-[#0e2353fc] to-[#234085fc]">
-      <div className="sm:max-w-lg md:max-w-[1024px] h-[100vh] m-auto p-5">
-        <div className="text-center mb-4">
-          <p className="text-2xl text-[#dabe96]">ราคาทองจีเเคป โกลด์</p>
-          <p className="text-md text-white">{goldAssn?.updatedTime}</p>
-        </div>
-
-        <div className="grid sm:grid-row-5 sm:grid-cols-1 md:grid-rows-2 md:grid-cols-2 gap-4">
+    <div className="min-h-[100vh] bg-linear-150 from-[#0e2353fc] to-[#234085fc]">
+      <div className="sm:max-w-lg md:max-w-[1024px] m-auto p-5">
+        <Header updatedTime={updatedTime} />
+        <div className="grid sm:grid-row-6 sm:grid-cols-1 md:grid-rows-2 md:grid-cols-2 gap-4">
           {/*--------------------- Gold 99.99% ---------------------*/}
           <GoldPriceCard
             title="ทองคำ 99.99%"
             content={
               <>
                 <BuySellContainer
-                  label={"เสนอซื้อ"}
-                  current={prices.gold99_buy}
-                  previous={prices.old_gold99_buy}
-                  highOrLow={"57,000"}
-                  type={"High"}
+                  label="เสนอซื้อ"
+                  current={goldGcap.gold99_buy}
+                  previous={goldGcap.old_gold99_buy}
+                  highOrLow={minmax.gold99.max.toLocaleString()}
+                  type="High"
                 />
                 <div className="divider divider-horizontal" />
                 <BuySellContainer
-                  label={"เสนอขาย"}
-                  current={prices.gold99_sell}
-                  previous={prices.old_gold99_sell}
-                  highOrLow={"55,800"}
-                  type={"Low"}
+                  label="เสนอขาย"
+                  current={goldGcap.gold99_sell}
+                  previous={goldGcap.old_gold99_sell}
+                  highOrLow={minmax.gold99.min.toLocaleString()}
+                  type="Low"
                 />
               </>
             }
@@ -164,19 +214,19 @@ export default function BoardcastPrice() {
             content={
               <>
                 <BuySellContainer
-                  label={"เสนอซื้อ"}
-                  current={prices.gold96_buy}
-                  previous={prices.old_gold96_buy}
-                  highOrLow={"55,250"}
-                  type={"High"}
+                  label="เสนอซื้อ"
+                  current={goldGcap.gold96_buy}
+                  previous={goldGcap.old_gold96_buy}
+                  highOrLow={minmax.gold96.max.toLocaleString()}
+                  type="High"
                 />
                 <div className="divider divider-horizontal" />
                 <BuySellContainer
-                  label={"เสนอขาย"}
-                  current={prices.gold96_sell}
-                  previous={prices.old_gold96_sell}
-                  highOrLow={"54,020"}
-                  type={"Low"}
+                  label="เสนอขาย"
+                  current={goldGcap.gold96_sell}
+                  previous={goldGcap.old_gold96_sell}
+                  highOrLow={minmax.gold96.min.toLocaleString()}
+                  type="Low"
                 />
               </>
             }
@@ -195,7 +245,7 @@ export default function BoardcastPrice() {
                 <div className="card grid grow place-items-center mb-3">
                   <div className="text-md">เสนอซื้อ</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-2xl font-bold">
+                    <span className="text-xl md:text-2xl font-bold">
                       {goldAssn?.buyPrice?.replace(".00", "")}
                     </span>
                   </div>
@@ -204,7 +254,7 @@ export default function BoardcastPrice() {
                 <div className="card grid grow place-items-center mb-3">
                   <div className="text-md">เสนอขาย</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-2xl font-bold">
+                    <span className="text-xl md:text-2xl font-bold">
                       {goldAssn?.sellPrice?.replace(".00", "")}
                     </span>
                   </div>
@@ -214,25 +264,60 @@ export default function BoardcastPrice() {
           />
 
           {/*--------------------- History Link --------------------*/}
-          <div className="text-center md:order-5 md:col-span-2">
+          <div className="text-center md:order-last md:col-span-2">
             <a
               href="https://www.gcap.co.th/goldprice/gcappricegold.php"
-              className="text-white hover:text-yellow-400 text-lg"
+              className="text-white hover:text-yellow-400 text-md"
               target="_blank"
               rel="noopener noreferrer">
               ราคาทองย้อนหลัง &#10093;
             </a>
           </div>
 
-          {/*--------------------- Trading View --------------------*/}
-          <div className="wrapper flex">
-            <div className="ads pr-[5px]">
-              <TradingViewWidget id="widget-xauusd" symbol="OANDA:XAUUSD" />
-            </div>
-            <div className="ads pl-[5px]">
-              <TradingViewWidget id="widget-usdthb" symbol="OANDA:USDTHB" />
+          {/*--------------------- Silver Price --------------------*/}
+          <div className="bg-white rounded p-2 md:order-5 md:col-span-2">
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md md:text-lg">
+                    <th>น้ำหนัก</th>
+                    <th>เสนอซื้อ</th>
+                    <th>เสนอขาย</th>
+                    <th>รวม Vat 7%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {silverPrice.length > 0 ? (
+                    silverPrice.map((item, i) => (
+                      <tr key={i}>
+                        <td className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md">
+                          {item.label}
+                        </td>
+                        <td className="text-end font-bold">
+                          {FormatNumber(item.bid)}
+                        </td>
+                        <td className="text-end font-bold">
+                          {FormatNumber(item.offer)}
+                        </td>
+                        <td className="text-end font-bold">
+                          {FormatNumber(item.withVat)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center text-gray-500">
+                        กำลังโหลดข้อมูล...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
+
+          {/*--------------------- Trading View --------------------*/}
+          <TradingViewCard />
         </div>
       </div>
     </div>

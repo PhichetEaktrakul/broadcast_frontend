@@ -8,7 +8,7 @@ export default function BuySellContainer({
   type,
 }) {
   const diff = Math.abs(current - previous);
-  const isUp = diff !== 0 && current >= previous; // only use isUp if diff != 0
+  const isUp = diff !== 0 && current >= previous; // isUp if diff != 0
   const textColor =
     diff === 0 ? "text-black" : isUp ? "text-green-600" : "text-red-600";
 
@@ -19,20 +19,20 @@ export default function BuySellContainer({
 
         <div
           className={`flex w-[100%] text-center justify-center items-center ${textColor}`}>
-          <span className="w-[10%] text-lg">
+          <span className="w-[10%] text-md md:text-lg">
             {diff === 0 ? null : isUp ? <FaSortUp /> : <FaSortDown />}
           </span>
 
-          <span className="w-[55%] text-2xl font-bold">
+          <span className="w-[55%] text-xl md:text-2xl font-bold">
             {current?.toLocaleString() ?? "-"}
           </span>
 
-          <span className="w-[10%] text-lg">
+          <span className="w-[10%] text-md md:text-lg">
             {diff === 0 ? "+0" : isUp ? `+${diff}` : `-${diff}`}
           </span>
         </div>
 
-        <div>
+        <div className="text-sm md:text-lg">
           {type} : <b>{highOrLow}</b>
         </div>
       </div>

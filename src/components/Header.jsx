@@ -1,0 +1,10 @@
+export default function Header({ updatedTime }) {
+  return (
+    <>
+      <div className="text-center mb-4">
+        <p className="text-2xl text-[#dabe96] font-sukhumvit-bold">ราคาทองจีเเคป โกลด์</p>
+        <p className="text-md text-white">{updatedTime}</p>
+      </div>
+    </>
+  );
+}
