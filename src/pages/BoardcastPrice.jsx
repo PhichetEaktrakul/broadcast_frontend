@@ -18,7 +18,7 @@ export default function BoardcastPrice() {
     old_gold96_buy: 0,
     old_gold96_sell: 0,
   });
-  const [goldAssn, setGoldAssn] = useState(null);  
+  const [goldAssn, setGoldAssn] = useState(null);
   const [silverPrice, setSilverPrice] = useState([]);
   const [updatedTime, setUpdatedTime] = useState("");
   const [minmax, setMinmax] = useState({
@@ -34,9 +34,7 @@ export default function BoardcastPrice() {
         const [gcapRes, assnRes, silverRes, minmaxRes] = await Promise.all([
           api.get("/gold-gcap/latest"),
           api.get("/gold-assn/latest"),
-          api.get(
-            "https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"
-          ),
+          api.get("https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"),
           api.get("https://uatptestgcapweb.gcap.co.th/api/tradePriceMinMax"),
         ]);
 
@@ -84,8 +82,8 @@ export default function BoardcastPrice() {
     };
 
     fetchData();
-   
-    const goldInterval = setInterval(fetchGoldAssn, 600000); // Refresh every 10 minutes (Gold Assn)    
+
+    const goldInterval = setInterval(fetchGoldAssn, 600000); // Refresh every 10 minutes (Gold Assn)
     const silverInterval = setInterval(fetchSilverPrice, 300000); // Refresh every 5 minutes (Silver)
     return () => {
       clearInterval(goldInterval);
@@ -128,7 +126,7 @@ export default function BoardcastPrice() {
           };
           setGoldGcap(newPrices);
 
-          // 🕒 Update time in Thai format
+          // Update time
           const now = new Date();
           const formatted = now.toLocaleDateString("th-TH", {
             day: "numeric",
@@ -142,7 +140,7 @@ export default function BoardcastPrice() {
           });
           setUpdatedTime(`ประจำวันที่ ${formatted} เวลา ${timeStr} น.`);
 
-          // ✅ Debounce API call (1 second)
+          // Debounce API call
           if (debounceTimer) clearTimeout(debounceTimer);
           debounceTimer = setTimeout(() => {
             if (newPrices.gold99_buy > 0 && newPrices.gold96_buy > 0) {
@@ -275,45 +273,43 @@ export default function BoardcastPrice() {
           </div>
 
           {/*--------------------- Silver Price --------------------*/}
-          <div className="bg-white rounded p-2 md:order-5 md:col-span-2">
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md md:text-lg">
-                    <th>น้ำหนัก</th>
-                    <th>เสนอซื้อ</th>
-                    <th>เสนอขาย</th>
-                    <th>รวม Vat 7%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {silverPrice.length > 0 ? (
-                    silverPrice.map((item, i) => (
-                      <tr key={i}>
-                        <td className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md">
-                          {item.label}
-                        </td>
-                        <td className="text-end font-bold">
-                          {FormatNumber(item.bid)}
-                        </td>
-                        <td className="text-end font-bold">
-                          {FormatNumber(item.offer)}
-                        </td>
-                        <td className="text-end font-bold">
-                          {FormatNumber(item.withVat)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center text-gray-500">
-                        กำลังโหลดข้อมูล...
+          <div className="bg-white rounded p-2 md:order-5 md:col-span-2 overflow-x-auto">
+            <table className="table">
+              <thead>
+                <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md md:text-lg">
+                  <th>น้ำหนัก</th>
+                  <th>เสนอซื้อ</th>
+                  <th>เสนอขาย</th>
+                  <th>รวม Vat 7%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {silverPrice.length > 0 ? (
+                  silverPrice.map((item, i) => (
+                    <tr key={i}>
+                      <td className="text-[#0e2353fc] font-sukhumvit-bold text-centermd:text-lg">
+                        {item.label}
+                      </td>
+                      <td className="text-end font-bold md:text-lg">
+                        {FormatNumber(item.bid)}
+                      </td>
+                      <td className="text-end font-bold md:text-lg">
+                        {FormatNumber(item.offer)}
+                      </td>
+                      <td className="text-end font-bold md:text-lg">
+                        {FormatNumber(item.withVat)}
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center text-gray-500">
+                      กำลังโหลดข้อมูล...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/*--------------------- Trading View --------------------*/}
