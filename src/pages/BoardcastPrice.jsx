@@ -25,6 +25,8 @@ export default function BoardcastPrice() {
     gold99: { min: 0, max: 0 },
     gold96: { min: 0, max: 0 },
   });
+  const [loading, setLoading] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
 
   //----------------------------------------------------------------------------------------
   // Fetch Initial Price & Refresh Data Periodically
@@ -37,7 +39,6 @@ export default function BoardcastPrice() {
           api.get("https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"),
           api.get("https://uatptestgcapweb.gcap.co.th/api/tradePriceMinMax"),
         ]);
-
         if (gcapRes.data) setGoldGcap(gcapRes.data);
         if (assnRes.data) setGoldAssn(assnRes.data);
         if (silverRes.data?.data?.items?.[0]?.rows) setSilverPrice(silverRes.data.data.items[0].rows.reverse());
@@ -46,17 +47,25 @@ export default function BoardcastPrice() {
             gold99: { min: 0, max: 0 },
             gold96: { min: 0, max: 0 },
           };
+
           minmaxRes.data.forEach((item) => {
+            const min = item.MinPrice ?? 0;
+            const max = item.MaxPrice ?? 0;
+
             if (item.assetGold === "1") {
-              updated.gold99 = { min: item.MinPrice, max: item.MaxPrice };
+              updated.gold99 = { min, max };
             } else if (item.assetGold === "2") {
-              updated.gold96 = { min: item.MinPrice, max: item.MaxPrice };
+              updated.gold96 = { min, max };
             }
           });
+
           setMinmax(updated);
         }
       } catch (err) {
         console.error("Failed to fetch initial data:", err);
+      } finally {
+        setFadeOut(true);
+        setTimeout(() => setLoading(false), 700);
       }
     };
 
@@ -178,7 +187,15 @@ export default function BoardcastPrice() {
   //----------------------------------------------------------------------------------------
 
   return (
-    <div className="min-h-[100vh] bg-linear-150 from-[#0e2353fc] to-[#234085fc]">
+    <div className="relative min-h-[100vh] bg-linear-150 from-[#0e2353fc] to-[#234085fc]">
+      {/*------------------------ Loading... -----------------------*/}
+      {loading && (
+        <div
+          className={`fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50 transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+          <span className="loading loading-dots loading-xl text-[#0e2353fc]"></span>
+        </div>
+      )}
+
       <div className="sm:max-w-lg md:max-w-[1024px] m-auto p-5">
         <Header updatedTime={updatedTime} />
         <div className="grid sm:grid-row-6 sm:grid-cols-1 md:grid-rows-2 md:grid-cols-2 gap-4">
@@ -241,16 +258,16 @@ export default function BoardcastPrice() {
             content={
               <>
                 <div className="card grid grow place-items-center mb-3">
-                  <div className="text-md">เสนอซื้อ</div>
+                  <div className="text-sm md:text-lg">เสนอซื้อ</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
                     <span className="text-xl md:text-2xl font-bold">
                       {goldAssn?.buyPrice?.replace(".00", "")}
                     </span>
                   </div>
                 </div>
-                <div className="divider divider-horizontal mb-3" />
+                <div className="divider divider-horizontal mb-2" />
                 <div className="card grid grow place-items-center mb-3">
-                  <div className="text-md">เสนอขาย</div>
+                  <div className="text-sm md:text-lg">เสนอขาย</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
                     <span className="text-xl md:text-2xl font-bold">
                       {goldAssn?.sellPrice?.replace(".00", "")}
@@ -265,7 +282,7 @@ export default function BoardcastPrice() {
           <div className="text-center md:order-last md:col-span-2">
             <a
               href="https://www.gcap.co.th/goldprice/gcappricegold.php"
-              className="text-white hover:text-yellow-400 text-md"
+              className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
               target="_blank"
               rel="noopener noreferrer">
               ราคาทองย้อนหลัง &#10093;
@@ -276,27 +293,27 @@ export default function BoardcastPrice() {
           <div className="bg-white rounded p-2 md:order-5 md:col-span-2 overflow-x-auto">
             <table className="table">
               <thead>
-                <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center text-md md:text-lg">
-                  <th>น้ำหนัก</th>
-                  <th>เสนอซื้อ</th>
-                  <th>เสนอขาย</th>
-                  <th>รวม Vat 7%</th>
+                <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg">
+                  <th className="px-0 py-1.5 md:py-3 w-1/4">น้ำหนัก</th>
+                  <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอซื้อ</th>
+                  <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอขาย</th>
+                  <th className="px-0 py-1.5 md:py-3 w-1/4">รวม Vat 7%</th>
                 </tr>
               </thead>
               <tbody>
                 {silverPrice.length > 0 ? (
                   silverPrice.map((item, i) => (
-                    <tr key={i}>
-                      <td className="text-[#0e2353fc] font-sukhumvit-bold text-centermd:text-lg">
+                    <tr key={i} className="font-sukhumvit-bold md:text-lg">
+                      <td className="text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">
                         {item.label}
                       </td>
-                      <td className="text-end font-bold md:text-lg">
+                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
                         {FormatNumber(item.bid)}
                       </td>
-                      <td className="text-end font-bold md:text-lg">
+                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
                         {FormatNumber(item.offer)}
                       </td>
-                      <td className="text-end font-bold md:text-lg">
+                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
                         {FormatNumber(item.withVat)}
                       </td>
                     </tr>

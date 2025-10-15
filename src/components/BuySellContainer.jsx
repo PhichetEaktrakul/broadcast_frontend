@@ -15,19 +15,19 @@ export default function BuySellContainer({
   return (
     <>
       <div className="card grid h-20 grow place-items-center">
-        <div className="text-md">{label}</div>
+        <div className="text-sm md:text-lg">{label}</div>
 
         <div
           className={`flex w-[100%] text-center justify-center items-center ${textColor}`}>
-          <span className="w-[10%] text-md md:text-lg">
+          <span className="w-[20%] md:w-[10%] md:text-lg">
             {diff === 0 ? null : isUp ? <FaSortUp /> : <FaSortDown />}
           </span>
 
-          <span className="w-[55%] text-xl md:text-2xl font-bold">
+          <span className="w-[60%] md:w-[55%] text-xl md:text-2xl font-bold">
             {current?.toLocaleString() ?? "-"}
           </span>
 
-          <span className="w-[10%] text-md md:text-lg">
+          <span className="w-[20%] md:w-[10%] md:text-lg">
             {diff === 0 ? "+0" : isUp ? `+${diff}` : `-${diff}`}
           </span>
         </div>
