@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
+import { urlConfig } from "../api/apiConfig";
 import GoldPriceCard from "../components/GoldPriceCard";
 import TradingViewCard from "../components/TradingViewCard";
 import BuySellContainer from "../components/BuySellContainer";
@@ -36,8 +37,8 @@ export default function BoardcastPrice() {
         const [gcapRes, assnRes, silverRes, minmaxRes] = await Promise.all([
           api.get("/gold-gcap/latest"),
           api.get("/gold-assn/latest"),
-          api.get("https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"),
-          api.get("https://uatptestgcapweb.gcap.co.th/api/tradePriceMinMax"),
+          api.get(urlConfig.apiSilver),
+          api.get(urlConfig.apiMinMax),
         ]);
         if (gcapRes.data) setGoldGcap(gcapRes.data);
         if (assnRes.data) setGoldAssn(assnRes.data);
@@ -80,9 +81,7 @@ export default function BoardcastPrice() {
 
     const fetchSilverPrice = async () => {
       try {
-        const res = await api.get(
-          "https://slv.testdev.pro/api/slv/silver/v2/price/history/public?Page=1&PageSize=1"
-        );
+        const res = await api.get(urlConfig.apiSilver);
         if (res.data?.data?.items?.[0]?.rows)
           setSilverPrice(res.data.data.items[0].rows.reverse());
       } catch (err) {
@@ -110,8 +109,6 @@ export default function BoardcastPrice() {
 
         const priceHub = window.$.connection.priceHub;
         const parsePrice = (val) => parseFloat(val?.replace(/,/g, "")) || 0;
-
-        let debounceTimer = null;
 
         priceHub.client.sendGoldPrice = function (
           gold99_buy,
@@ -148,20 +145,10 @@ export default function BoardcastPrice() {
             hour12: false,
           });
           setUpdatedTime(`ประจำวันที่ ${formatted} เวลา ${timeStr} น.`);
-
-          // Debounce API call
-          if (debounceTimer) clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
-            if (newPrices.gold99_buy > 0 && newPrices.gold96_buy > 0) {
-              api
-                .post("/gold-gcap", newPrices)
-                .catch((err) => console.error("❌ Failed to save:", err));
-            }
-          }, 1000);
         };
 
         // Connect to SignalR
-        window.$.connection.hub.url = "https://g266.gcaponline.com/signalr";
+        window.$.connection.hub.url = urlConfig.apiSignalR;
         window.$.connection.hub
           .start()
           .done(() => console.log("✅ Connected to SignalR"))
@@ -290,43 +277,46 @@ export default function BoardcastPrice() {
           </div>
 
           {/*--------------------- Silver Price --------------------*/}
-          <div className="bg-white rounded p-2 md:order-5 md:col-span-2 overflow-x-auto">
-            <table className="table">
-              <thead>
-                <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg">
-                  <th className="px-0 py-1.5 md:py-3 w-1/4">น้ำหนัก</th>
-                  <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอซื้อ</th>
-                  <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอขาย</th>
-                  <th className="px-0 py-1.5 md:py-3 w-1/4">รวม Vat 7%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {silverPrice.length > 0 ? (
-                  silverPrice.map((item, i) => (
-                    <tr key={i} className="font-sukhumvit-bold md:text-lg">
-                      <td className="text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">
-                        {item.label}
-                      </td>
-                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                        {FormatNumber(item.bid)}
-                      </td>
-                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                        {FormatNumber(item.offer)}
-                      </td>
-                      <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                        {FormatNumber(item.withVat)}
+          <div className="md:order-5 md:col-span-2 overflow-x-auto">
+            <div className="bg-white rounded p-2">
+              <table className="table">
+                <thead>
+                  <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg">
+                    <th className="px-0 py-1.5 md:py-3 w-1/4">น้ำหนัก</th>
+                    <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอซื้อ</th>
+                    <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอขาย</th>
+                    <th className="px-0 py-1.5 md:py-3 w-1/4">รวม Vat 7%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {silverPrice.length > 0 ? (
+                    silverPrice.map((item, i) => (
+                      <tr key={i} className="font-sukhumvit-bold md:text-lg">
+                        <td className="text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">
+                          {item.label}
+                        </td>
+                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
+                          {FormatNumber(item.bid)}
+                        </td>
+                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
+                          {FormatNumber(item.offer)}
+                        </td>
+                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
+                          {FormatNumber(item.withVat)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center text-gray-500">
+                        กำลังโหลดข้อมูล...
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="text-center text-gray-500">
-                      กำลังโหลดข้อมูล...
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-white text-center text-sm md:text-[16px] mt-3">* น้ำหนัก 1 บาท (15.244 กรัม), 100 กรัม, 150 กรัม ราคารวมค่ากำเหน็จ เเละค่าจัดส่งไปรษณีย์เเล้ว</p>
           </div>
 
           {/*--------------------- Trading View --------------------*/}
