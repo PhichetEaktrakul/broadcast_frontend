@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
 import { urlConfig } from "../api/apiConfig";
+import { FormatNumber } from "../utility/function";
 import GoldPriceCard from "../components/GoldPriceCard";
 import TradingViewCard from "../components/TradingViewCard";
 import BuySellContainer from "../components/BuySellContainer";
 import Header from "../components/Header";
 import GoldIcon from "../assets/GoldIcon.png";
-import { FormatNumber } from "../utility/function";
 
 export default function BoardcastPrice() {
   const [goldGcap, setGoldGcap] = useState({
@@ -37,7 +37,7 @@ export default function BoardcastPrice() {
         const [gcapRes, assnRes, silverRes, minmaxRes] = await Promise.all([
           api.get("/gold-gcap/latest"),
           api.get("/gold-assn/latest"),
-          api.get(urlConfig.apiSilver),
+          api.get("/silver-price/latest"),
           api.get(urlConfig.apiMinMax),
         ]);
         if (gcapRes.data) setGoldGcap(gcapRes.data);
@@ -81,7 +81,7 @@ export default function BoardcastPrice() {
 
     const fetchSilverPrice = async () => {
       try {
-        const res = await api.get(urlConfig.apiSilver);
+        const res = await api.get("/silver-price/latest");
         if (res.data?.data?.items?.[0]?.rows)
           setSilverPrice(res.data.data.items[0].rows.reverse());
       } catch (err) {
@@ -268,10 +268,9 @@ export default function BoardcastPrice() {
           {/*--------------------- History Link --------------------*/}
           <div className="text-center md:order-last md:col-span-2">
             <a
-              href="https://www.gcap.co.th/goldprice/gcappricegold.php"
+              href={urlConfig.urlHistory}
               className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
-              target="_blank"
-              rel="noopener noreferrer">
+              target="_self">
               ราคาทองย้อนหลัง &#10093;
             </a>
           </div>
