@@ -35,9 +35,9 @@ export default function BoardcastPrice() {
     const fetchData = async () => {
       try {
         const [gcapRes, assnRes, silverRes, minmaxRes] = await Promise.all([
-          api.get("/gold-gcap/latest"),
-          api.get("/gold-assn/latest"),
-          api.get("/silver-price/latest"),
+          api.get("/api/gold-gcap/latest"),
+          api.get("/api/gold-assn/latest"),
+          api.get("/api/silver-price/latest"),
           api.get(urlConfig.apiMinMax),
         ]);
         if (gcapRes.data) setGoldGcap(gcapRes.data);
@@ -72,7 +72,7 @@ export default function BoardcastPrice() {
 
     const fetchGoldAssn = async () => {
       try {
-        const res = await api.get("/gold-assn/latest");
+        const res = await api.get("/api/gold-assn/latest");
         if (res.data) setGoldAssn(res.data);
       } catch (err) {
         console.error("Failed to refresh gold association price:", err);
@@ -81,7 +81,7 @@ export default function BoardcastPrice() {
 
     const fetchSilverPrice = async () => {
       try {
-        const res = await api.get("/silver-price/latest");
+        const res = await api.get("/api/silver-price/latest");
         if (res.data?.data?.items?.[0]?.rows)
           setSilverPrice(res.data.data.items[0].rows.reverse());
       } catch (err) {
@@ -278,6 +278,7 @@ export default function BoardcastPrice() {
           {/*--------------------- Silver Price --------------------*/}
           <div className="md:order-5 md:col-span-2 overflow-x-auto">
             <div className="bg-white rounded p-2">
+              <p class="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg mb-2">ราคาเงินเเท่ง</p>
               <table className="table">
                 <thead>
                   <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg">
