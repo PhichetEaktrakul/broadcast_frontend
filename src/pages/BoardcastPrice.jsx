@@ -42,7 +42,8 @@ export default function BoardcastPrice() {
         ]);
         if (gcapRes.data) setGoldGcap(gcapRes.data);
         if (assnRes.data) setGoldAssn(assnRes.data);
-        if (silverRes.data?.data?.items?.[0]?.rows) setSilverPrice(silverRes.data.data.items[0].rows.reverse());
+        if (silverRes.data?.data?.items?.[0]?.rows)
+          setSilverPrice(silverRes.data.data.items[0].rows.reverse());
         if (Array.isArray(minmaxRes.data)) {
           const updated = {
             gold99: { min: 0, max: 0 },
@@ -173,18 +174,33 @@ export default function BoardcastPrice() {
   }, []);
   //----------------------------------------------------------------------------------------
 
+  //----------------------------------------------------------------------------------------
+  const weightLabels = {
+    "1b": (
+      <span>1 BAHT <br />
+        <span className="text-[12px]">(15.244 g)</span>
+      </span>
+    ),
+    "100g": <span>100 g</span>,
+    "150g": <span>150 g</span>,
+    "1kg": <span>1 Kg</span>,
+  };
+  //----------------------------------------------------------------------------------------
+
   return (
     <div className="relative min-h-[100vh] bg-linear-150 from-[#0e2353fc] to-[#234085fc]">
       {/*------------------------ Loading... -----------------------*/}
       {loading && (
         <div
-          className={`fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50 transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+          className={`fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50 transition-opacity duration-700 ${
+            fadeOut ? "opacity-0" : "opacity-100"
+          }`}>
           <span className="loading loading-dots loading-xl text-[#0e2353fc]"></span>
         </div>
       )}
 
+      <Header updatedTime={updatedTime} />
       <div className="sm:max-w-lg md:max-w-[1024px] m-auto p-5">
-        <Header updatedTime={updatedTime} />
         <div className="grid sm:grid-row-6 sm:grid-cols-1 md:grid-rows-2 md:grid-cols-2 gap-4">
           {/*--------------------- Gold 99.99% ---------------------*/}
           <GoldPriceCard
@@ -244,19 +260,19 @@ export default function BoardcastPrice() {
             }
             content={
               <>
-                <div className="card grid grow place-items-center mb-3">
+                <div className="card grid grow place-items-center mb-2">
                   <div className="text-sm md:text-lg">เสนอซื้อ</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-xl md:text-2xl font-bold">
+                    <span className="text-2xl md:text-3xl font-extrabold">
                       {goldAssn?.buyPrice?.replace(".00", "")}
                     </span>
                   </div>
                 </div>
                 <div className="divider divider-horizontal mb-2" />
-                <div className="card grid grow place-items-center mb-3">
+                <div className="card grid grow place-items-center mb-2">
                   <div className="text-sm md:text-lg">เสนอขาย</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-xl md:text-2xl font-bold">
+                    <span className="text-2xl md:text-3xl font-extrabold">
                       {goldAssn?.sellPrice?.replace(".00", "")}
                     </span>
                   </div>
@@ -265,10 +281,10 @@ export default function BoardcastPrice() {
             }
           />
 
-          {/*--------------------- History Link --------------------*/}
-          <div className="text-center md:order-last md:col-span-2">
+          {/*--------------------- Gold History Link --------------------*/}
+          <div className="text-center md:order-5 md:col-span-2 mt-[-10px]">
             <a
-              href={urlConfig.urlHistory}
+              href={urlConfig.urlGHistory}
               className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
               target="_self">
               ราคาทองย้อนหลัง &#10093;
@@ -277,46 +293,43 @@ export default function BoardcastPrice() {
 
           {/*--------------------- Silver Price --------------------*/}
           <div className="md:order-5 md:col-span-2 overflow-x-auto">
-            <div className="bg-white rounded p-2">
-              <p class="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg mb-2">ราคาเงินเเท่ง</p>
-              <table className="table">
+            <div className="bg-white rounded-xl p-2">
+              <p className="text-[#0e2353fc] font-sukhumvit-bold text-center text-xl md:text-2xl mb-2">ราคาเงินเเท่ง 99.99%</p>
+              <table className="table-fixed w-full">
                 <thead>
-                  <tr className="text-[#0e2353fc] font-sukhumvit-bold text-center md:text-lg">
-                    <th className="px-0 py-1.5 md:py-3 w-1/4">น้ำหนัก</th>
-                    <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอซื้อ</th>
-                    <th className="px-0 py-1.5 md:py-3 w-1/4">เสนอขาย</th>
-                    <th className="px-0 py-1.5 md:py-3 w-1/4">รวม Vat 7%</th>
+                  <tr className="text-[#0e2353fc] font-sukhumvit-bold text-end md:text-lg">
+                    <th className="w-15 md:w-40 px-0 py-1.5 md:py-3 text-center">น้ำหนัก</th>
+                    <th className="w-1/3 px-0 py-1.5 md:py-3 md:px-4">เสนอซื้อ</th>
+                    <th className="w-1/3 px-0 py-1.5 md:py-3 md:px-4">เสนอขาย</th>
+                    <th className="w-1/3 px-0 py-1.5 md:py-3 md:px-4">รวม Vat 7%</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {silverPrice.length > 0 ? (
-                    silverPrice.map((item, i) => (
-                      <tr key={i} className="font-sukhumvit-bold md:text-lg">
-                        <td className="text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">
-                          {item.label}
-                        </td>
-                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                          {FormatNumber(item.bid)}
-                        </td>
-                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                          {FormatNumber(item.offer)}
-                        </td>
-                        <td className="text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">
-                          {FormatNumber(item.withVat)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center text-gray-500">
-                        กำลังโหลดข้อมูล...
-                      </td>
+                  {silverPrice.map((item, i) => (
+                    <tr key={i} className="font-sukhumvit-bold md:text-lg ">
+                      <td className="w-40 text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">{weightLabels[item.key] || item.label}</td>
+                      <td className="w-1/3 text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">{FormatNumber(item.bid)}</td>
+                      <td className="w-1/3 text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">{FormatNumber(item.offer)}</td>
+                      <td className="w-1/3 text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">{FormatNumber(item.withVat)}</td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
-            <p className="text-white text-center text-sm md:text-[16px] mt-3">* น้ำหนัก 1 บาท (15.244 กรัม), 100 กรัม, 150 กรัม ราคารวมค่ากำเหน็จ เเละค่าจัดส่งไปรษณีย์เเล้ว</p>
+            
+            <div className="text-center mt-2">
+              {/*--------------------- Silver History Link --------------------*/}
+              <a
+                href={urlConfig.urlSHistory}
+                className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
+                target="_self">
+                ราคาเงินเเท่งย้อนหลัง &#10093;
+              </a>
+              <p className="text-white text-center text-sm md:text-[16px] mt-1">
+                * น้ำหนัก 1 บาท (15.244 กรัม), 100 กรัม, 150 กรัม {<br />}
+                ราคารวมค่ากำเหน็จ เเละค่าจัดส่งไปรษณีย์เเล้ว
+              </p>
+            </div>
           </div>
 
           {/*--------------------- Trading View --------------------*/}

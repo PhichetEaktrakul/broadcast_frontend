@@ -9,26 +9,25 @@ export default function BuySellContainer({
 }) {
   const diff = Math.abs(current - previous);
   const isUp = diff !== 0 && current >= previous; // isUp if diff != 0
-  const textColor =
-    diff === 0 ? "text-black" : isUp ? "text-green-600" : "text-red-600";
-
+  const textColor = diff === 0 ? "text-black" : isUp ? "text-green-600" : "text-red-600";
+  const arrow = isUp ? "mt-2" : "mb-2";
+  
   return (
     <>
-      <div className="card grid h-20 grow place-items-center">
+      <div className="card grid h-18 grow place-items-center">
         <div className="text-sm md:text-lg">{label}</div>
 
-        <div
-          className={`flex w-[100%] text-center justify-center items-center ${textColor}`}>
-          <span className="w-[20%] md:w-[10%] md:text-lg">
+        <div className={`flex w-[100%] justify-center items-center ${textColor}`}>
+          <span className={`w-[20%] md:w-[10%] md:text-lg justify-items-end ${arrow}`}>
             {diff === 0 ? null : isUp ? <FaSortUp /> : <FaSortDown />}
           </span>
 
-          <span className="w-[60%] md:w-[55%] text-xl md:text-2xl font-bold">
+          <span className="w-[60%] md:w-[55%] text-2xl md:text-3xl font-extrabold text-center">
             {current?.toLocaleString() ?? "-"}
           </span>
 
           <span className="w-[20%] md:w-[10%] md:text-lg">
-            {diff === 0 ? "+0" : isUp ? `+${diff}` : `-${diff}`}
+            {diff === 0 ? " " : isUp ? `+${diff}` : `-${diff}`}
           </span>
         </div>
 

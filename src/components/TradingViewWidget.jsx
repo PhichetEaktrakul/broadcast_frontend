@@ -27,5 +27,11 @@ export default function TradingViewWidget({ id, symbol }) {
     container.appendChild(script);
   }, [id, symbol]);
 
-  return <div className="tradingview-widget-container" id={id}></div>;
+  return (
+    <>
+      <div className="rounded-xl overflow-hidden border border-gray-300">
+        <div className="tradingview-widget-container" id={id}></div>
+      </div>
+    </>
+  );
 }
