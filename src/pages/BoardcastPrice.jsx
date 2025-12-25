@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
 import { urlConfig } from "../api/apiConfig";
 import { FormatNumber } from "../utility/function";
+import { FaAngleRight } from "react-icons/fa6";
 import GoldPriceCard from "../components/GoldPriceCard";
 import TradingViewCard from "../components/TradingViewCard";
 import BuySellContainer from "../components/BuySellContainer";
@@ -178,12 +179,12 @@ export default function BoardcastPrice() {
   const weightLabels = {
     "1b": (
       <span>1 BAHT <br />
-        <span className="text-[12px]">(15.244 g)</span>
+        <span className="text-[12px]">(15.244g)</span>
       </span>
     ),
-    "100g": <span>100 g</span>,
-    "150g": <span>150 g</span>,
-    "1kg": <span>1 Kg</span>,
+    "100g": <span>100g</span>,
+    "150g": <span>150g</span>,
+    "1kg": <span>1KG</span>,
   };
   //----------------------------------------------------------------------------------------
 
@@ -263,7 +264,7 @@ export default function BoardcastPrice() {
                 <div className="card grid grow place-items-center mb-2">
                   <div className="text-sm md:text-lg">เสนอซื้อ</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-2xl md:text-3xl font-extrabold">
+                    <span className="text-[1.7rem] leading-[1.3] md:text-3xl font-extrabold">
                       {goldAssn?.buyPrice?.replace(".00", "")}
                     </span>
                   </div>
@@ -272,7 +273,7 @@ export default function BoardcastPrice() {
                 <div className="card grid grow place-items-center mb-2">
                   <div className="text-sm md:text-lg">เสนอขาย</div>
                   <div className="flex w-[100%] text-center justify-center items-center">
-                    <span className="text-2xl md:text-3xl font-extrabold">
+                    <span className="text-[1.7rem] leading-[1.3] md:text-3xl font-extrabold">
                       {goldAssn?.sellPrice?.replace(".00", "")}
                     </span>
                   </div>
@@ -285,9 +286,10 @@ export default function BoardcastPrice() {
           <div className="text-center md:order-5 md:col-span-2 mt-[-10px]">
             <a
               href={urlConfig.urlGHistory}
-              className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
+              className="inline-flex items-center text-white hover:text-yellow-400 text-sm md:text-[16px]"
               target="_self">
-              ราคาทองย้อนหลัง &#10093;
+              ราคาทองย้อนหลัง 
+              <FaAngleRight />
             </a>
           </div>
 
@@ -296,7 +298,7 @@ export default function BoardcastPrice() {
             <div className="bg-white rounded-xl p-2">
               <p className="text-[#0e2353fc] font-sukhumvit-bold text-center text-xl md:text-2xl mb-2">ราคาเงินเเท่ง 99.99%</p>
               <table className="table-fixed w-full">
-                <thead>
+                <thead className="border-b border-gray-400">
                   <tr className="text-[#0e2353fc] font-sukhumvit-bold text-end md:text-lg">
                     <th className="w-15 md:w-40 px-0 py-1.5 md:py-3 text-center">น้ำหนัก</th>
                     <th className="w-1/3 px-0 py-1.5 md:py-3 md:px-4">เสนอซื้อ</th>
@@ -306,7 +308,7 @@ export default function BoardcastPrice() {
                 </thead>
                 <tbody>
                   {silverPrice.map((item, i) => (
-                    <tr key={i} className="font-sukhumvit-bold md:text-lg ">
+                    <tr key={i} className="border-b border-gray-400 last:border-b-0 font-sukhumvit-bold md:text-lg">
                       <td className="w-40 text-[#0e2353fc] text-center px-0 py-2.5 md:px-4 md:py-3">{weightLabels[item.key] || item.label}</td>
                       <td className="w-1/3 text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">{FormatNumber(item.bid)}</td>
                       <td className="w-1/3 text-gray-600 text-end px-0 py-2.5 md:px-4 md:py-3">{FormatNumber(item.offer)}</td>
@@ -321,9 +323,10 @@ export default function BoardcastPrice() {
               {/*--------------------- Silver History Link --------------------*/}
               <a
                 href={urlConfig.urlSHistory}
-                className="text-white hover:text-yellow-400 text-sm md:text-[16px]"
+                className="inline-flex items-center text-white hover:text-yellow-400 text-sm md:text-[16px]"
                 target="_self">
-                ราคาเงินเเท่งย้อนหลัง &#10093;
+                ราคาเงินแท่งย้อนหลัง
+                <FaAngleRight />
               </a>
               <p className="text-white text-center text-sm md:text-[16px] mt-1">
                 * น้ำหนัก 1 บาท (15.244 กรัม), 100 กรัม, 150 กรัม {<br />}
